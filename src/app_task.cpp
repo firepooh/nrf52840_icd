@@ -16,6 +16,8 @@
 
 #include <zephyr/logging/log.h>
 
+#include <zephyr/pm/device.h>
+
 LOG_MODULE_DECLARE(app, CONFIG_CHIP_APP_LOG_LEVEL);
 
 using namespace ::chip;
@@ -39,9 +41,18 @@ CHIP_ERROR AppTask::Init()
 	return Nrf::Matter::StartServer();
 }
 
+
+
 CHIP_ERROR AppTask::StartApp()
 {
 	ReturnErrorOnFailure(Init());
+
+    const auto * qspi_dev = DEVICE_DT_GET(DT_INST(0, nordic_qspi_nor));
+	if (device_is_ready(qspi_dev))
+	{
+		// Put the peripheral into suspended state.
+		pm_device_action_run(qspi_dev, PM_DEVICE_ACTION_SUSPEND);
+	}
 
 	while (true) {
 		Nrf::DispatchNextTask();
